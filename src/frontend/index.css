@@ -1,0 +1,142 @@
+@import url('https://fonts.googleapis.com/css2?family=Crimson+Text:wght@400;600;700&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Academic Navy + Warm Terracotta + Sage Green palette */
+    --radius: 0.5rem;
+    
+    /* Backgrounds - Warm cream base */
+    --background: 0.98 0.01 65;
+    --foreground: 0.25 0.02 260;
+    
+    /* Cards - Pure white with subtle warmth */
+    --card: 1 0 0;
+    --card-foreground: 0.25 0.02 260;
+    
+    /* Popovers */
+    --popover: 1 0 0;
+    --popover-foreground: 0.25 0.02 260;
+    
+    /* Primary - Deep Academic Navy */
+    --primary: 0.32 0.08 260;
+    --primary-foreground: 0.98 0 0;
+    
+    /* Secondary - Warm Terracotta */
+    --secondary: 0.65 0.12 35;
+    --secondary-foreground: 0.98 0 0;
+    
+    /* Muted - Soft warm gray */
+    --muted: 0.94 0.01 65;
+    --muted-foreground: 0.52 0.02 260;
+    
+    /* Accent - Sage Green */
+    --accent: 0.68 0.06 145;
+    --accent-foreground: 0.15 0.02 260;
+    
+    /* Destructive */
+    --destructive: 0.55 0.22 25;
+    --destructive-foreground: 0.98 0 0;
+    
+    /* Success - Deeper sage */
+    --success: 0.58 0.08 145;
+    --success-foreground: 0.98 0 0;
+    
+    /* Warning - Amber */
+    --warning: 0.75 0.15 65;
+    --warning-foreground: 0.15 0.02 260;
+    
+    /* Borders & Inputs */
+    --border: 0.88 0.01 260;
+    --input: 0.88 0.01 260;
+    --ring: 0.32 0.08 260;
+    
+    /* Charts */
+    --chart-1: 0.32 0.08 260;
+    --chart-2: 0.65 0.12 35;
+    --chart-3: 0.68 0.06 145;
+    --chart-4: 0.75 0.15 65;
+    --chart-5: 0.55 0.22 25;
+  }
+
+  .dark {
+    /* Dark mode - Deep navy background */
+    --background: 0.18 0.03 260;
+    --foreground: 0.96 0.01 65;
+    
+    --card: 0.24 0.03 260;
+    --card-foreground: 0.96 0.01 65;
+    
+    --popover: 0.24 0.03 260;
+    --popover-foreground: 0.96 0.01 65;
+    
+    /* Primary - Lighter navy for dark mode */
+    --primary: 0.68 0.08 260;
+    --primary-foreground: 0.15 0.02 260;
+    
+    /* Secondary - Softer terracotta */
+    --secondary: 0.55 0.10 35;
+    --secondary-foreground: 0.96 0.01 65;
+    
+    --muted: 0.28 0.03 260;
+    --muted-foreground: 0.65 0.02 260;
+    
+    /* Accent - Brighter sage */
+    --accent: 0.72 0.08 145;
+    --accent-foreground: 0.15 0.02 260;
+    
+    --destructive: 0.62 0.20 25;
+    --destructive-foreground: 0.96 0.01 65;
+    
+    --success: 0.65 0.10 145;
+    --success-foreground: 0.15 0.02 260;
+    
+    --warning: 0.70 0.14 65;
+    --warning-foreground: 0.15 0.02 260;
+    
+    --border: 0.32 0.03 260;
+    --input: 0.32 0.03 260;
+    --ring: 0.68 0.08 260;
+    
+    --chart-1: 0.68 0.08 260;
+    --chart-2: 0.65 0.12 35;
+    --chart-3: 0.72 0.08 145;
+    --chart-4: 0.75 0.15 65;
+    --chart-5: 0.62 0.20 25;
+  }
+
+  * {
+    @apply border-border;
+  }
+  
+  body {
+    @apply bg-background text-foreground;
+    font-family: 'DM Sans', system-ui, -apple-system, sans-serif;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Crimson Text', Georgia, serif;
+    font-weight: 600;
+  }
+}
+
+@layer utilities {
+  .diagonal-accent {
+    position: relative;
+  }
+  
+  .diagonal-accent::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 4px;
+    background: linear-gradient(135deg, oklch(var(--secondary)) 0%, oklch(var(--accent)) 100%);
+    transform: skewY(-2deg);
+    transform-origin: top left;
+  }
+}
