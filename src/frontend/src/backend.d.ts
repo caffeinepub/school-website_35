@@ -50,16 +50,30 @@ export enum ApplicationStatus {
 }
 export interface backendInterface {
     addAdmin(principalId: Principal): Promise<void>;
+    deleteAdmissionApplication(applicationId: string): Promise<void>;
+    deleteStudentResult(rollNumber: bigint): Promise<void>;
     getAdmissionApplication(applicationId: string): Promise<AdmissionApplication | null>;
+    getAdmissionApplicationsByStatus(status: ApplicationStatus): Promise<Array<AdmissionApplication>>;
+    getAllAdmins(): Promise<Array<Principal>>;
     getAllAdmissionApplications(): Promise<Array<AdmissionApplication>>;
+    getAllApplicationsSortedByTimestamp(): Promise<Array<AdmissionApplication>>;
     getAllContactSubmissions(): Promise<Array<ContactSubmission>>;
+    getAllResultsSortedByPercentage(): Promise<Array<StudentResult>>;
     getAllStudentResults(): Promise<Array<StudentResult>>;
     getStudentResult(rollNumber: bigint): Promise<StudentResult | null>;
+    getStudentResultsByClass(className: string): Promise<Array<StudentResult>>;
+    getStudentResultsBySubject(subjectName: string): Promise<Array<StudentResult>>;
+    initializeFirstAdmin(): Promise<boolean>;
     isAdmin(principalId: Principal): Promise<boolean>;
+    isSuperAdmin(principalId: Principal): Promise<boolean>;
     removeAdmin(principalId: Principal): Promise<void>;
+    removeAdminBySuperAdmin(principalId: Principal): Promise<void>;
     resetSystem(c: Principal): Promise<void>;
+    searchApplicationsByStudentName(searchTerm: string): Promise<Array<AdmissionApplication>>;
     submitAdmissionApplication(studentName: string, fatherName: string, motherName: string, dateOfBirth: string, mobile: string, address: string, email: string, previousSchool: string, className: string, documentUrls: Array<string>): Promise<void>;
     submitContactForm(name: string, email: string, phone: string, message: string): Promise<void>;
     submitStudentResult(rollNumber: bigint, studentName: string, className: string, subjects: Array<SubjectMark>): Promise<void>;
+    updateApplicationDocumentUrls(applicationId: string, documentUrls: Array<string>): Promise<void>;
+    updateApplicationField(applicationId: string, field: string, value: string): Promise<void>;
     updateApplicationStatus(applicationId: string, status: ApplicationStatus): Promise<void>;
 }

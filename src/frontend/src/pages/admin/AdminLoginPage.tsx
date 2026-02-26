@@ -29,18 +29,32 @@ export default function AdminLoginPage() {
       setError("");
 
       try {
-        const principal = identity.getPrincipal();
-        const isAdmin = await actor.isAdmin(principal);
+        // Create timeout promise (10 seconds)
+        const timeoutPromise = new Promise<boolean>((_, reject) =>
+          setTimeout(() => reject(new Error("Request timeout")), 10000)
+        );
 
-        if (isAdmin) {
-          toast.success("Welcome, Admin!");
+        // Race between actual call and timeout
+        const isAuthorized = await Promise.race([
+          actor.initializeFirstAdmin(),
+          timeoutPromise,
+        ]);
+
+        if (isAuthorized) {
+          toast.success("Welcome, Admin!", {
+            description: "आप successfully login हो गए हैं!",
+          });
           navigate({ to: "/admin/dashboard" });
         } else {
           setError("You are not authorized as an admin. Please contact the super admin.");
         }
       } catch (err) {
         console.error("Error checking admin status:", err);
-        setError("Failed to verify admin status. Please try again.");
+        if (err instanceof Error && err.message === "Request timeout") {
+          setError("Connection timeout. Please check your internet and try again.");
+        } else {
+          setError("Failed to verify admin status. Please try again.");
+        }
       } finally {
         setIsChecking(false);
       }
@@ -91,7 +105,7 @@ export default function AdminLoginPage() {
             {isLoading ? (
               <>
                 <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                {isChecking ? "Verifying..." : "Logging in..."}
+                {isChecking ? "Admin access verify हो रहा है..." : "Logging in..."}
               </>
             ) : (
               <>

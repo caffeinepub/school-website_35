@@ -48,17 +48,38 @@ export interface StudentResult {
 export interface SubjectMark { 'marks' : bigint, 'subject' : string }
 export interface _SERVICE {
   'addAdmin' : ActorMethod<[Principal], undefined>,
+  'deleteAdmissionApplication' : ActorMethod<[string], undefined>,
+  'deleteStudentResult' : ActorMethod<[bigint], undefined>,
   'getAdmissionApplication' : ActorMethod<
     [string],
     [] | [AdmissionApplication]
   >,
+  'getAdmissionApplicationsByStatus' : ActorMethod<
+    [ApplicationStatus],
+    Array<AdmissionApplication>
+  >,
+  'getAllAdmins' : ActorMethod<[], Array<Principal>>,
   'getAllAdmissionApplications' : ActorMethod<[], Array<AdmissionApplication>>,
+  'getAllApplicationsSortedByTimestamp' : ActorMethod<
+    [],
+    Array<AdmissionApplication>
+  >,
   'getAllContactSubmissions' : ActorMethod<[], Array<ContactSubmission>>,
+  'getAllResultsSortedByPercentage' : ActorMethod<[], Array<StudentResult>>,
   'getAllStudentResults' : ActorMethod<[], Array<StudentResult>>,
   'getStudentResult' : ActorMethod<[bigint], [] | [StudentResult]>,
+  'getStudentResultsByClass' : ActorMethod<[string], Array<StudentResult>>,
+  'getStudentResultsBySubject' : ActorMethod<[string], Array<StudentResult>>,
+  'initializeFirstAdmin' : ActorMethod<[], boolean>,
   'isAdmin' : ActorMethod<[Principal], boolean>,
+  'isSuperAdmin' : ActorMethod<[Principal], boolean>,
   'removeAdmin' : ActorMethod<[Principal], undefined>,
+  'removeAdminBySuperAdmin' : ActorMethod<[Principal], undefined>,
   'resetSystem' : ActorMethod<[Principal], undefined>,
+  'searchApplicationsByStudentName' : ActorMethod<
+    [string],
+    Array<AdmissionApplication>
+  >,
   'submitAdmissionApplication' : ActorMethod<
     [
       string,
@@ -82,6 +103,11 @@ export interface _SERVICE {
     [bigint, string, string, Array<SubjectMark>],
     undefined
   >,
+  'updateApplicationDocumentUrls' : ActorMethod<
+    [string, Array<string>],
+    undefined
+  >,
+  'updateApplicationField' : ActorMethod<[string, string, string], undefined>,
   'updateApplicationStatus' : ActorMethod<
     [string, ApplicationStatus],
     undefined

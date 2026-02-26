@@ -132,17 +132,31 @@ export enum ApplicationStatus {
 }
 export interface backendInterface {
     addAdmin(principalId: Principal): Promise<void>;
+    deleteAdmissionApplication(applicationId: string): Promise<void>;
+    deleteStudentResult(rollNumber: bigint): Promise<void>;
     getAdmissionApplication(applicationId: string): Promise<AdmissionApplication | null>;
+    getAdmissionApplicationsByStatus(status: ApplicationStatus): Promise<Array<AdmissionApplication>>;
+    getAllAdmins(): Promise<Array<Principal>>;
     getAllAdmissionApplications(): Promise<Array<AdmissionApplication>>;
+    getAllApplicationsSortedByTimestamp(): Promise<Array<AdmissionApplication>>;
     getAllContactSubmissions(): Promise<Array<ContactSubmission>>;
+    getAllResultsSortedByPercentage(): Promise<Array<StudentResult>>;
     getAllStudentResults(): Promise<Array<StudentResult>>;
     getStudentResult(rollNumber: bigint): Promise<StudentResult | null>;
+    getStudentResultsByClass(className: string): Promise<Array<StudentResult>>;
+    getStudentResultsBySubject(subjectName: string): Promise<Array<StudentResult>>;
+    initializeFirstAdmin(): Promise<boolean>;
     isAdmin(principalId: Principal): Promise<boolean>;
+    isSuperAdmin(principalId: Principal): Promise<boolean>;
     removeAdmin(principalId: Principal): Promise<void>;
+    removeAdminBySuperAdmin(principalId: Principal): Promise<void>;
     resetSystem(c: Principal): Promise<void>;
+    searchApplicationsByStudentName(searchTerm: string): Promise<Array<AdmissionApplication>>;
     submitAdmissionApplication(studentName: string, fatherName: string, motherName: string, dateOfBirth: string, mobile: string, address: string, email: string, previousSchool: string, className: string, documentUrls: Array<string>): Promise<void>;
     submitContactForm(name: string, email: string, phone: string, message: string): Promise<void>;
     submitStudentResult(rollNumber: bigint, studentName: string, className: string, subjects: Array<SubjectMark>): Promise<void>;
+    updateApplicationDocumentUrls(applicationId: string, documentUrls: Array<string>): Promise<void>;
+    updateApplicationField(applicationId: string, field: string, value: string): Promise<void>;
     updateApplicationStatus(applicationId: string, status: ApplicationStatus): Promise<void>;
 }
 import type { AdmissionApplication as _AdmissionApplication, ApplicationStatus as _ApplicationStatus, StudentResult as _StudentResult } from "./declarations/backend.did.d.ts";
@@ -162,6 +176,34 @@ export class Backend implements backendInterface {
             return result;
         }
     }
+    async deleteAdmissionApplication(arg0: string): Promise<void> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.deleteAdmissionApplication(arg0);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.deleteAdmissionApplication(arg0);
+            return result;
+        }
+    }
+    async deleteStudentResult(arg0: bigint): Promise<void> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.deleteStudentResult(arg0);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.deleteStudentResult(arg0);
+            return result;
+        }
+    }
     async getAdmissionApplication(arg0: string): Promise<AdmissionApplication | null> {
         if (this.processError) {
             try {
@@ -176,18 +218,60 @@ export class Backend implements backendInterface {
             return from_candid_opt_n1(this._uploadFile, this._downloadFile, result);
         }
     }
+    async getAdmissionApplicationsByStatus(arg0: ApplicationStatus): Promise<Array<AdmissionApplication>> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getAdmissionApplicationsByStatus(to_candid_ApplicationStatus_n6(this._uploadFile, this._downloadFile, arg0));
+                return from_candid_vec_n8(this._uploadFile, this._downloadFile, result);
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getAdmissionApplicationsByStatus(to_candid_ApplicationStatus_n6(this._uploadFile, this._downloadFile, arg0));
+            return from_candid_vec_n8(this._uploadFile, this._downloadFile, result);
+        }
+    }
+    async getAllAdmins(): Promise<Array<Principal>> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getAllAdmins();
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getAllAdmins();
+            return result;
+        }
+    }
     async getAllAdmissionApplications(): Promise<Array<AdmissionApplication>> {
         if (this.processError) {
             try {
                 const result = await this.actor.getAllAdmissionApplications();
-                return from_candid_vec_n6(this._uploadFile, this._downloadFile, result);
+                return from_candid_vec_n8(this._uploadFile, this._downloadFile, result);
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
             const result = await this.actor.getAllAdmissionApplications();
-            return from_candid_vec_n6(this._uploadFile, this._downloadFile, result);
+            return from_candid_vec_n8(this._uploadFile, this._downloadFile, result);
+        }
+    }
+    async getAllApplicationsSortedByTimestamp(): Promise<Array<AdmissionApplication>> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getAllApplicationsSortedByTimestamp();
+                return from_candid_vec_n8(this._uploadFile, this._downloadFile, result);
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getAllApplicationsSortedByTimestamp();
+            return from_candid_vec_n8(this._uploadFile, this._downloadFile, result);
         }
     }
     async getAllContactSubmissions(): Promise<Array<ContactSubmission>> {
@@ -201,6 +285,20 @@ export class Backend implements backendInterface {
             }
         } else {
             const result = await this.actor.getAllContactSubmissions();
+            return result;
+        }
+    }
+    async getAllResultsSortedByPercentage(): Promise<Array<StudentResult>> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getAllResultsSortedByPercentage();
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getAllResultsSortedByPercentage();
             return result;
         }
     }
@@ -222,14 +320,56 @@ export class Backend implements backendInterface {
         if (this.processError) {
             try {
                 const result = await this.actor.getStudentResult(arg0);
-                return from_candid_opt_n7(this._uploadFile, this._downloadFile, result);
+                return from_candid_opt_n9(this._uploadFile, this._downloadFile, result);
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
             const result = await this.actor.getStudentResult(arg0);
-            return from_candid_opt_n7(this._uploadFile, this._downloadFile, result);
+            return from_candid_opt_n9(this._uploadFile, this._downloadFile, result);
+        }
+    }
+    async getStudentResultsByClass(arg0: string): Promise<Array<StudentResult>> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getStudentResultsByClass(arg0);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getStudentResultsByClass(arg0);
+            return result;
+        }
+    }
+    async getStudentResultsBySubject(arg0: string): Promise<Array<StudentResult>> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getStudentResultsBySubject(arg0);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getStudentResultsBySubject(arg0);
+            return result;
+        }
+    }
+    async initializeFirstAdmin(): Promise<boolean> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.initializeFirstAdmin();
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.initializeFirstAdmin();
+            return result;
         }
     }
     async isAdmin(arg0: Principal): Promise<boolean> {
@@ -243,6 +383,20 @@ export class Backend implements backendInterface {
             }
         } else {
             const result = await this.actor.isAdmin(arg0);
+            return result;
+        }
+    }
+    async isSuperAdmin(arg0: Principal): Promise<boolean> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.isSuperAdmin(arg0);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.isSuperAdmin(arg0);
             return result;
         }
     }
@@ -260,6 +414,20 @@ export class Backend implements backendInterface {
             return result;
         }
     }
+    async removeAdminBySuperAdmin(arg0: Principal): Promise<void> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.removeAdminBySuperAdmin(arg0);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.removeAdminBySuperAdmin(arg0);
+            return result;
+        }
+    }
     async resetSystem(arg0: Principal): Promise<void> {
         if (this.processError) {
             try {
@@ -272,6 +440,20 @@ export class Backend implements backendInterface {
         } else {
             const result = await this.actor.resetSystem(arg0);
             return result;
+        }
+    }
+    async searchApplicationsByStudentName(arg0: string): Promise<Array<AdmissionApplication>> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.searchApplicationsByStudentName(arg0);
+                return from_candid_vec_n8(this._uploadFile, this._downloadFile, result);
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.searchApplicationsByStudentName(arg0);
+            return from_candid_vec_n8(this._uploadFile, this._downloadFile, result);
         }
     }
     async submitAdmissionApplication(arg0: string, arg1: string, arg2: string, arg3: string, arg4: string, arg5: string, arg6: string, arg7: string, arg8: string, arg9: Array<string>): Promise<void> {
@@ -316,17 +498,45 @@ export class Backend implements backendInterface {
             return result;
         }
     }
-    async updateApplicationStatus(arg0: string, arg1: ApplicationStatus): Promise<void> {
+    async updateApplicationDocumentUrls(arg0: string, arg1: Array<string>): Promise<void> {
         if (this.processError) {
             try {
-                const result = await this.actor.updateApplicationStatus(arg0, to_candid_ApplicationStatus_n8(this._uploadFile, this._downloadFile, arg1));
+                const result = await this.actor.updateApplicationDocumentUrls(arg0, arg1);
                 return result;
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
-            const result = await this.actor.updateApplicationStatus(arg0, to_candid_ApplicationStatus_n8(this._uploadFile, this._downloadFile, arg1));
+            const result = await this.actor.updateApplicationDocumentUrls(arg0, arg1);
+            return result;
+        }
+    }
+    async updateApplicationField(arg0: string, arg1: string, arg2: string): Promise<void> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.updateApplicationField(arg0, arg1, arg2);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.updateApplicationField(arg0, arg1, arg2);
+            return result;
+        }
+    }
+    async updateApplicationStatus(arg0: string, arg1: ApplicationStatus): Promise<void> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.updateApplicationStatus(arg0, to_candid_ApplicationStatus_n6(this._uploadFile, this._downloadFile, arg1));
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.updateApplicationStatus(arg0, to_candid_ApplicationStatus_n6(this._uploadFile, this._downloadFile, arg1));
             return result;
         }
     }
@@ -340,7 +550,7 @@ function from_candid_ApplicationStatus_n4(_uploadFile: (file: ExternalBlob) => P
 function from_candid_opt_n1(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [_AdmissionApplication]): AdmissionApplication | null {
     return value.length === 0 ? null : from_candid_AdmissionApplication_n2(_uploadFile, _downloadFile, value[0]);
 }
-function from_candid_opt_n7(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [_StudentResult]): StudentResult | null {
+function from_candid_opt_n9(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [_StudentResult]): StudentResult | null {
     return value.length === 0 ? null : value[0];
 }
 function from_candid_record_n3(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
@@ -397,13 +607,13 @@ function from_candid_variant_n5(_uploadFile: (file: ExternalBlob) => Promise<Uin
 }): ApplicationStatus {
     return "pending" in value ? ApplicationStatus.pending : "approved" in value ? ApplicationStatus.approved : "rejected" in value ? ApplicationStatus.rejected : value;
 }
-function from_candid_vec_n6(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: Array<_AdmissionApplication>): Array<AdmissionApplication> {
+function from_candid_vec_n8(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: Array<_AdmissionApplication>): Array<AdmissionApplication> {
     return value.map((x)=>from_candid_AdmissionApplication_n2(_uploadFile, _downloadFile, x));
 }
-function to_candid_ApplicationStatus_n8(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: ApplicationStatus): _ApplicationStatus {
-    return to_candid_variant_n9(_uploadFile, _downloadFile, value);
+function to_candid_ApplicationStatus_n6(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: ApplicationStatus): _ApplicationStatus {
+    return to_candid_variant_n7(_uploadFile, _downloadFile, value);
 }
-function to_candid_variant_n9(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: ApplicationStatus): {
+function to_candid_variant_n7(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: ApplicationStatus): {
     pending: null;
 } | {
     approved: null;

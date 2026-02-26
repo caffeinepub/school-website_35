@@ -1,14 +1,17 @@
 import Map "mo:core/Map";
-import Text "mo:core/Text";
 import Principal "mo:core/Principal";
-import List "mo:core/List";
-import Time "mo:core/Time";
-import Nat "mo:core/Nat";
-import Runtime "mo:core/Runtime";
+import RunTime "mo:core/Runtime";
 import Iter "mo:core/Iter";
-import Migration "migration";
+import List "mo:core/List";
+import Text "mo:core/Text";
+import Nat "mo:core/Nat";
+import Int "mo:core/Int";
+import Order "mo:core/Order";
+import Time "mo:core/Time";
 
-(with migration = Migration.run)
+import TextUtil "textUtil";
+
+
 actor {
   // Type Definitions
   type ContactSubmission = {
@@ -57,7 +60,6 @@ actor {
     timestamp : Int;
   };
 
-  // State variables
   let contactSubmissions = Map.empty<Nat, ContactSubmission>();
   var nextContactId = 1;
 
@@ -65,11 +67,16 @@ actor {
   var nextApplicationNumber = 1;
 
   let studentResults = Map.empty<Nat, StudentResult>();
-
-  let adminList = List.empty<Principal>();
+  var superAdmin : ?Principal = null;
+  let admins = List.empty<Principal>();
 
   // CONTACT FORM LOGIC
-  public shared ({ caller }) func submitContactForm(name : Text, email : Text, phone : Text, message : Text) : async () {
+  public shared ({ caller }) func submitContactForm(
+    name : Text,
+    email : Text,
+    phone : Text,
+    message : Text,
+  ) : async () {
     let submission : ContactSubmission = {
       id = nextContactId;
       name;
@@ -100,7 +107,7 @@ actor {
     documentUrls : [Text],
   ) : async () {
     let applicationNumber = nextApplicationNumber;
-    let applicationId = "BSS/2026/" # applicationNumber.toText();
+    let applicationId = "BSS/2026/" # TextUtil.padLeft(applicationNumber.toText(), 3, '0');
 
     let application : AdmissionApplication = {
       id = applicationId;
@@ -122,7 +129,9 @@ actor {
     admissionApplications.add(applicationId, application);
   };
 
-  public query ({ caller }) func getAdmissionApplication(applicationId : Text) : async ?AdmissionApplication {
+  public query ({ caller }) func getAdmissionApplication(
+    applicationId : Text,
+  ) : async ?AdmissionApplication {
     admissionApplications.get(applicationId);
   };
 
@@ -130,14 +139,137 @@ actor {
     admissionApplications.values().toArray();
   };
 
-  public shared ({ caller }) func updateApplicationStatus(applicationId : Text, status : ApplicationStatus) : async () {
+  public query ({ caller }) func getAdmissionApplicationsByStatus(
+    status : ApplicationStatus,
+  ) : async [AdmissionApplication] {
+    let iter = admissionApplications.values();
+    let filteredIter = iter.filter(
+      func(application) {
+        application.status == status;
+      }
+    );
+    filteredIter.toArray();
+  };
+
+  public shared ({ caller }) func updateApplicationStatus(
+    applicationId : Text,
+    status : ApplicationStatus,
+  ) : async () {
     switch (admissionApplications.get(applicationId)) {
       case (?application) {
         let updatedApplication = { application with status };
         admissionApplications.add(applicationId, updatedApplication);
       };
       case (null) {
-        Runtime.trap("Application not found : " # applicationId);
+        RunTime.trap("Application not found : " # applicationId);
+      };
+    };
+  };
+
+  public shared ({ caller }) func updateApplicationField(
+    applicationId : Text,
+    field : Text,
+    value : Text,
+  ) : async () {
+    switch (admissionApplications.get(applicationId)) {
+      case (?application) {
+        switch (field) {
+          case ("studentName") {
+            admissionApplications.add(applicationId, { application with studentName = value });
+          };
+          case ("fatherName") {
+            admissionApplications.add(applicationId, { application with fatherName = value });
+          };
+          case ("motherName") {
+            admissionApplications.add(applicationId, { application with motherName = value });
+          };
+          case ("dateOfBirth") {
+            admissionApplications.add(applicationId, { application with dateOfBirth = value });
+          };
+          case ("mobile") {
+            admissionApplications.add(applicationId, { application with mobile = value });
+          };
+          case ("address") {
+            admissionApplications.add(applicationId, { application with address = value });
+          };
+          case ("email") {
+            admissionApplications.add(applicationId, { application with email = value });
+          };
+          case ("previousSchool") {
+            admissionApplications.add(applicationId, { application with previousSchool = value });
+          };
+          case ("className") {
+            admissionApplications.add(applicationId, { application with className = value });
+          };
+          case (_) {
+            RunTime.trap("Invalid field name: " # field);
+          };
+        };
+      };
+      case (null) {
+        RunTime.trap("Application not found: " # applicationId);
+      };
+    };
+  };
+
+  public shared ({ caller }) func updateApplicationDocumentUrls(
+    applicationId : Text,
+    documentUrls : [Text],
+  ) : async () {
+    switch (admissionApplications.get(applicationId)) {
+      case (?application) {
+        let updatedApplication = { application with documentUrls };
+        admissionApplications.add(applicationId, updatedApplication);
+      };
+      case (null) {
+        RunTime.trap("Application not found: " # applicationId);
+      };
+    };
+  };
+
+  public query ({ caller }) func searchApplicationsByStudentName(
+    searchTerm : Text,
+  ) : async [AdmissionApplication] {
+    let iter = admissionApplications.values();
+    let filteredIter = iter.filter(
+      func(application) {
+        application.studentName.contains(
+          #text searchTerm,
+        );
+      }
+    );
+    filteredIter.toArray();
+  };
+
+  func compareApplicationsByTimestamp(
+    a : AdmissionApplication,
+    b : AdmissionApplication,
+  ) : Order.Order {
+    let aTimestamp : Nat = a.timestamp.toNat();
+    let bTimestamp : Nat = b.timestamp.toNat();
+    Nat.compare(bTimestamp, aTimestamp);
+  };
+
+  public query ({ caller }) func getAllApplicationsSortedByTimestamp() : async [AdmissionApplication] {
+    let applicationsArray = admissionApplications.values().toArray();
+    applicationsArray.sort(
+      compareApplicationsByTimestamp
+    );
+  };
+
+  // ADMIN ONLY DELETE APPLICATION
+  public shared ({ caller }) func deleteAdmissionApplication(applicationId : Text) : async () {
+    let isAdminCheck = await isAdmin(caller);
+    if (not isAdminCheck) {
+      RunTime.trap("Unauthorized : " # caller.toText() # " is not admin");
+    };
+
+    switch (admissionApplications.get(applicationId)) {
+      case (?_) {
+        admissionApplications.remove(applicationId);
+      };
+      case (null) {
+        RunTime.trap("Application not found: " # applicationId);
       };
     };
   };
@@ -172,7 +304,9 @@ actor {
     studentResults.add(rollNumber, result);
   };
 
-  public query ({ caller }) func getStudentResult(rollNumber : Nat) : async ?StudentResult {
+  public query ({ caller }) func getStudentResult(
+    rollNumber : Nat,
+  ) : async ?StudentResult {
     studentResults.get(rollNumber);
   };
 
@@ -180,62 +314,167 @@ actor {
     studentResults.values().toArray();
   };
 
+  public query ({ caller }) func getStudentResultsByClass(
+    className : Text,
+  ) : async [StudentResult] {
+    let iter = studentResults.values();
+    let filteredIter = iter.filter(
+      func(result) {
+        result.className == className;
+      }
+    );
+    filteredIter.toArray();
+  };
+
+  public query ({ caller }) func getStudentResultsBySubject(
+    subjectName : Text,
+  ) : async [StudentResult] {
+    let iter = studentResults.values();
+    let filteredIter = iter.filter(
+      func(result) {
+        let hasSubject = result.subjects.find(
+          func(subject) {
+            subject.subject == subjectName;
+          }
+        );
+        switch (hasSubject) {
+          case (?_) { true };
+          case (null) { false };
+        };
+      }
+    );
+    filteredIter.toArray();
+  };
+
+  func compareResultsByPercentage(
+    a : StudentResult,
+    b : StudentResult,
+  ) : Order.Order {
+    Nat.compare(b.percentage, a.percentage);
+  };
+
+  public query ({ caller }) func getAllResultsSortedByPercentage() : async [StudentResult] {
+    let resultsArray = studentResults.values().toArray();
+    resultsArray.sort(
+      compareResultsByPercentage
+    );
+  };
+
+  // ADMIN ONLY DELETE RESULT
+  public shared ({ caller }) func deleteStudentResult(rollNumber : Nat) : async () {
+    let isAdminCheck = await isAdmin(caller);
+    if (not isAdminCheck) {
+      RunTime.trap("Unauthorized : " # caller.toText() # " is not admin");
+    };
+
+    switch (studentResults.get(rollNumber)) {
+      case (?_) {
+        studentResults.remove(rollNumber);
+      };
+      case (null) {
+        RunTime.trap("Result not found: " # rollNumber.toText());
+      };
+    };
+  };
+
   // ADMIN LOGIC
+  public shared ({ caller }) func initializeFirstAdmin() : async Bool {
+    if (admins.isEmpty()) {
+      admins.add(caller);
+      superAdmin := ?caller;
+      true;
+    } else {
+      await isAdmin(caller);
+    };
+  };
+
   public shared ({ caller }) func addAdmin(principalId : Principal) : async () {
     let isCallerAdmin = await isAdmin(caller);
     if (isCallerAdmin) {
-      let isExist = adminList.any(func(p) { Principal.equal(p, principalId) });
-      if (isExist) {
-        Runtime.trap("Principal " # principalId.toText() # " is already admin!");
-      } else {
-        adminList.add(principalId);
+      let exist = admins.any(func(p) { Principal.equal(p, principalId) });
+      if (exist) {
+        RunTime.trap("Admin already present!");
       };
+      admins.add(principalId);
     } else {
-      Runtime.trap("Unauthorized : Caller " # caller.toText() # " is not an admin");
+      RunTime.trap("Unauthorized : " # caller.toText() # " is not admin");
     };
   };
 
   public shared ({ caller }) func removeAdmin(principalId : Principal) : async () {
-    let isCallerAdmin = await isAdmin(caller);
-    if (isCallerAdmin) {
-      let mapList = adminList.map(func(p) { p });
-      for (p in mapList.values()) {
-        if (Principal.equal(p, principalId)) {
-          Runtime.trap("Cannot remove the last admin!");
+    let isAdminCheck = await isAdmin(caller);
+    if (not isAdminCheck) {
+      RunTime.trap("Unauthorized : " # caller.toText() # " is not admin");
+    };
+
+    let filteredList = admins.filter(
+      func(p) { not Principal.equal(p, principalId) }
+    );
+    admins.clear();
+    let valuesIter = filteredList.values();
+    switch (valuesIter.next()) {
+      case (null) { admins.clear() };
+      case (?value) {
+        admins.add(value);
+        for (p in valuesIter) { admins.add(p) };
+      };
+    };
+  };
+
+  public shared ({ caller }) func removeAdminBySuperAdmin(principalId : Principal) : async () {
+    switch (superAdmin) {
+      case (?admin) if (Principal.equal(admin, caller)) {
+        let filteredList = admins.filter(
+          func(p) { not Principal.equal(p, principalId) }
+        );
+        admins.clear();
+        let valuesIter = filteredList.values();
+        switch (valuesIter.next()) {
+          case (null) { admins.clear() };
+          case (?value) {
+            admins.add(value);
+            for (p in valuesIter) {
+              admins.add(p);
+            };
+          };
         };
       };
-      let filteredList = adminList.filter(func(p) { not Principal.equal(p, principalId) });
-      adminList.clear();
-      let valuesIter = filteredList.values();
-      switch (valuesIter.next()) {
-        case (null) { adminList.clear() };
-        case (?value) {
-          adminList.add(value);
-          for (p in valuesIter) { adminList.add(p) };
-        };
+      case (_) {
+        RunTime.trap("Unauthorized : " # caller.toText() # " is not super admin");
       };
-    } else {
-      Runtime.trap("Unauthorized : " # caller.toText() # " is not admin");
     };
   };
 
   public query ({ caller }) func isAdmin(principalId : Principal) : async Bool {
-    adminList.any(func(p) { Principal.equal(p, principalId) });
+    admins.any(func(p) { Principal.equal(p, principalId) });
   };
 
-  public shared ({ caller }) func resetSystem(c : Principal) : async () {
-    let isCallerAdmin = await isAdmin(c);
-    if (not isCallerAdmin) {
-      Runtime.trap("Unauthorized : " # c.toText() # " is not admin");
+  public query ({ caller }) func isSuperAdmin(principalId : Principal) : async Bool {
+    switch (superAdmin) {
+      case (?admin) { Principal.equal(admin, principalId) };
+      case (null) { false };
+    };
+  };
+
+  public query ({ caller }) func getAllAdmins() : async [Principal] {
+    admins.toArray();
+  };
+
+  public shared ({ caller }) func resetSystem(
+    c : Principal,
+  ) : async () {
+    let isAdminCheck = await isAdmin(c);
+    if (not isAdminCheck) {
+      RunTime.trap("Unauthorized : " # c.toText() # " is not admin");
     };
 
     contactSubmissions.clear();
     admissionApplications.clear();
     studentResults.clear();
-    adminList.clear();
+    admins.clear();
 
     let defaultAdmin = c;
-    adminList.add(defaultAdmin);
+    admins.add(defaultAdmin);
 
     nextContactId := 1;
     nextApplicationNumber := 1;

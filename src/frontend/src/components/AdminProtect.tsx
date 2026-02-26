@@ -26,10 +26,18 @@ export default function AdminProtect({ children }: { children: ReactNode }) {
       }
 
       try {
-        const principal = identity.getPrincipal();
-        const isAdmin = await actor.isAdmin(principal);
+        // Create timeout promise (10 seconds)
+        const timeoutPromise = new Promise<boolean>((_, reject) =>
+          setTimeout(() => reject(new Error("Request timeout")), 10000)
+        );
 
-        if (isAdmin) {
+        // Race between actual call and timeout
+        const isAuthorized = await Promise.race([
+          actor.initializeFirstAdmin(),
+          timeoutPromise,
+        ]);
+
+        if (isAuthorized) {
           setIsAuthorized(true);
         } else {
           navigate({ to: "/admin/login" });

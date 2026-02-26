@@ -52,12 +52,25 @@ export const StudentResult = IDL.Record({
 
 export const idlService = IDL.Service({
   'addAdmin' : IDL.Func([IDL.Principal], [], []),
+  'deleteAdmissionApplication' : IDL.Func([IDL.Text], [], []),
+  'deleteStudentResult' : IDL.Func([IDL.Nat], [], []),
   'getAdmissionApplication' : IDL.Func(
       [IDL.Text],
       [IDL.Opt(AdmissionApplication)],
       ['query'],
     ),
+  'getAdmissionApplicationsByStatus' : IDL.Func(
+      [ApplicationStatus],
+      [IDL.Vec(AdmissionApplication)],
+      ['query'],
+    ),
+  'getAllAdmins' : IDL.Func([], [IDL.Vec(IDL.Principal)], ['query']),
   'getAllAdmissionApplications' : IDL.Func(
+      [],
+      [IDL.Vec(AdmissionApplication)],
+      ['query'],
+    ),
+  'getAllApplicationsSortedByTimestamp' : IDL.Func(
       [],
       [IDL.Vec(AdmissionApplication)],
       ['query'],
@@ -67,11 +80,34 @@ export const idlService = IDL.Service({
       [IDL.Vec(ContactSubmission)],
       ['query'],
     ),
+  'getAllResultsSortedByPercentage' : IDL.Func(
+      [],
+      [IDL.Vec(StudentResult)],
+      ['query'],
+    ),
   'getAllStudentResults' : IDL.Func([], [IDL.Vec(StudentResult)], ['query']),
   'getStudentResult' : IDL.Func([IDL.Nat], [IDL.Opt(StudentResult)], ['query']),
+  'getStudentResultsByClass' : IDL.Func(
+      [IDL.Text],
+      [IDL.Vec(StudentResult)],
+      ['query'],
+    ),
+  'getStudentResultsBySubject' : IDL.Func(
+      [IDL.Text],
+      [IDL.Vec(StudentResult)],
+      ['query'],
+    ),
+  'initializeFirstAdmin' : IDL.Func([], [IDL.Bool], []),
   'isAdmin' : IDL.Func([IDL.Principal], [IDL.Bool], ['query']),
+  'isSuperAdmin' : IDL.Func([IDL.Principal], [IDL.Bool], ['query']),
   'removeAdmin' : IDL.Func([IDL.Principal], [], []),
+  'removeAdminBySuperAdmin' : IDL.Func([IDL.Principal], [], []),
   'resetSystem' : IDL.Func([IDL.Principal], [], []),
+  'searchApplicationsByStudentName' : IDL.Func(
+      [IDL.Text],
+      [IDL.Vec(AdmissionApplication)],
+      ['query'],
+    ),
   'submitAdmissionApplication' : IDL.Func(
       [
         IDL.Text,
@@ -98,6 +134,12 @@ export const idlService = IDL.Service({
       [],
       [],
     ),
+  'updateApplicationDocumentUrls' : IDL.Func(
+      [IDL.Text, IDL.Vec(IDL.Text)],
+      [],
+      [],
+    ),
+  'updateApplicationField' : IDL.Func([IDL.Text, IDL.Text, IDL.Text], [], []),
   'updateApplicationStatus' : IDL.Func([IDL.Text, ApplicationStatus], [], []),
 });
 
@@ -145,12 +187,25 @@ export const idlFactory = ({ IDL }) => {
   
   return IDL.Service({
     'addAdmin' : IDL.Func([IDL.Principal], [], []),
+    'deleteAdmissionApplication' : IDL.Func([IDL.Text], [], []),
+    'deleteStudentResult' : IDL.Func([IDL.Nat], [], []),
     'getAdmissionApplication' : IDL.Func(
         [IDL.Text],
         [IDL.Opt(AdmissionApplication)],
         ['query'],
       ),
+    'getAdmissionApplicationsByStatus' : IDL.Func(
+        [ApplicationStatus],
+        [IDL.Vec(AdmissionApplication)],
+        ['query'],
+      ),
+    'getAllAdmins' : IDL.Func([], [IDL.Vec(IDL.Principal)], ['query']),
     'getAllAdmissionApplications' : IDL.Func(
+        [],
+        [IDL.Vec(AdmissionApplication)],
+        ['query'],
+      ),
+    'getAllApplicationsSortedByTimestamp' : IDL.Func(
         [],
         [IDL.Vec(AdmissionApplication)],
         ['query'],
@@ -160,15 +215,38 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Vec(ContactSubmission)],
         ['query'],
       ),
+    'getAllResultsSortedByPercentage' : IDL.Func(
+        [],
+        [IDL.Vec(StudentResult)],
+        ['query'],
+      ),
     'getAllStudentResults' : IDL.Func([], [IDL.Vec(StudentResult)], ['query']),
     'getStudentResult' : IDL.Func(
         [IDL.Nat],
         [IDL.Opt(StudentResult)],
         ['query'],
       ),
+    'getStudentResultsByClass' : IDL.Func(
+        [IDL.Text],
+        [IDL.Vec(StudentResult)],
+        ['query'],
+      ),
+    'getStudentResultsBySubject' : IDL.Func(
+        [IDL.Text],
+        [IDL.Vec(StudentResult)],
+        ['query'],
+      ),
+    'initializeFirstAdmin' : IDL.Func([], [IDL.Bool], []),
     'isAdmin' : IDL.Func([IDL.Principal], [IDL.Bool], ['query']),
+    'isSuperAdmin' : IDL.Func([IDL.Principal], [IDL.Bool], ['query']),
     'removeAdmin' : IDL.Func([IDL.Principal], [], []),
+    'removeAdminBySuperAdmin' : IDL.Func([IDL.Principal], [], []),
     'resetSystem' : IDL.Func([IDL.Principal], [], []),
+    'searchApplicationsByStudentName' : IDL.Func(
+        [IDL.Text],
+        [IDL.Vec(AdmissionApplication)],
+        ['query'],
+      ),
     'submitAdmissionApplication' : IDL.Func(
         [
           IDL.Text,
@@ -195,6 +273,12 @@ export const idlFactory = ({ IDL }) => {
         [],
         [],
       ),
+    'updateApplicationDocumentUrls' : IDL.Func(
+        [IDL.Text, IDL.Vec(IDL.Text)],
+        [],
+        [],
+      ),
+    'updateApplicationField' : IDL.Func([IDL.Text, IDL.Text, IDL.Text], [], []),
     'updateApplicationStatus' : IDL.Func([IDL.Text, ApplicationStatus], [], []),
   });
 };
