@@ -1,6 +1,5 @@
 import { useEffect, useState, useCallback } from "react";
 import { useActor } from "@/hooks/useActor";
-import { useInternetIdentity } from "@/hooks/useInternetIdentity";
 import AdminProtect from "@/components/AdminProtect";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -43,7 +42,6 @@ function AdminManagementContent() {
   const [isRemoving, setIsRemoving] = useState(false);
   const [addError, setAddError] = useState("");
   const { actor, isFetching } = useActor();
-  const { identity } = useInternetIdentity();
 
   const fetchAdmins = useCallback(async () => {
     if (!actor || isFetching) return;
@@ -112,8 +110,6 @@ function AdminManagementContent() {
       setIsRemoving(false);
     }
   };
-
-  const currentPrincipal = identity?.getPrincipal().toString();
 
   return (
     <div className="p-6 lg:p-8">
@@ -220,41 +216,32 @@ function AdminManagementContent() {
               </div>
             ) : (
               <div className="space-y-2">
-                {admins.map((admin) => {
-                  const isCurrentUser = currentPrincipal === admin.toString();
-                  return (
-                    <div
-                      key={admin.toString()}
-                      className="flex items-center justify-between rounded-lg border border-slate-100 bg-slate-50 p-3"
-                    >
-                      <div className="flex items-center gap-3 min-w-0">
-                        <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${isCurrentUser ? "bg-indigo-100" : "bg-slate-200"}`}>
-                          <Shield className={`h-4 w-4 ${isCurrentUser ? "text-indigo-600" : "text-slate-500"}`} />
-                        </div>
-                        <div className="min-w-0">
-                          <p className="truncate font-mono text-xs text-slate-700">
-                            {truncatePrincipal(admin)}
-                          </p>
-                          {isCurrentUser && (
-                            <p className="text-[10px] font-medium text-indigo-600">
-                              You (Super Admin)
-                            </p>
-                          )}
-                        </div>
+                {admins.map((admin) => (
+                  <div
+                    key={admin.toString()}
+                    className="flex items-center justify-between rounded-lg border border-slate-100 bg-slate-50 p-3"
+                  >
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-slate-200">
+                        <Shield className="h-4 w-4 text-slate-500" />
                       </div>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleRemoveClick(admin)}
-                        disabled={isCurrentUser}
-                        className="ml-2 shrink-0 text-slate-400 hover:bg-red-50 hover:text-red-600 disabled:cursor-not-allowed disabled:opacity-40"
-                        title={isCurrentUser ? "Cannot remove yourself" : "Remove admin"}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
+                      <div className="min-w-0">
+                        <p className="truncate font-mono text-xs text-slate-700">
+                          {truncatePrincipal(admin)}
+                        </p>
+                      </div>
                     </div>
-                  );
-                })}
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleRemoveClick(admin)}
+                      className="ml-2 shrink-0 text-slate-400 hover:bg-red-50 hover:text-red-600"
+                      title="Remove admin"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ))}
               </div>
             )}
           </CardContent>

@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { useActor } from "@/hooks/useActor";
-import { useInternetIdentity } from "@/hooks/useInternetIdentity";
 import AdminProtect from "@/components/AdminProtect";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -108,11 +107,10 @@ function DashboardContent() {
   const [admins, setAdmins] = useState<Principal[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const { actor, isFetching } = useActor();
-  const { identity } = useInternetIdentity();
 
   useEffect(() => {
     const fetchData = async () => {
-      if (!actor || isFetching || !identity) return;
+      if (!actor || isFetching) return;
 
       setIsLoading(true);
       try {
@@ -132,7 +130,7 @@ function DashboardContent() {
     };
 
     fetchData();
-  }, [actor, isFetching, identity]);
+  }, [actor, isFetching]);
 
   const pendingApps = applications.filter(
     (app) => app.status === ApplicationStatus.pending
